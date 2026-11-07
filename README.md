@@ -90,3 +90,5 @@ Most requests need you to be logged in. Send the "Log in" request, and copy the 
 - Rows from the database keep their column names, e.g. `user.avatar_key`, but `req.user` uses camelCase, e.g. `req.user.avatarKey`.
 - The frontend uses the API's field names as they are, e.g. `user.first_name`.
 - The API sends each record's UUID as `id`. The numeric database id (`req.user.internalId`) is only used in SQL queries.
+
+add

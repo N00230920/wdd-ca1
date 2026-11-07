@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL ?? "";
 
 // The login token from the API. It's kept in localStorage, so you stay logged
 // in when you reload the page or come back later (until it expires after 7 days).

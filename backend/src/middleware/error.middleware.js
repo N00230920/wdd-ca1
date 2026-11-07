@@ -7,7 +7,7 @@ export function unknownEndpoint(_req, res) {
 }
 
 // Any error thrown in a route ends up here
-export function errorHandler(err, _req, res, _next) {
+export function errorHandler(err, _req, res) {
   // Errors from Multer while uploading. Multer has already removed any files it saved.
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {
