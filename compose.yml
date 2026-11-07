@@ -1,10 +1,16 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      target: dev
     ports:
       - "8000:8000"
+    env_file:
+      - ./backend/.env
     volumes:
-      - ./backend:/app
+      - ./backend/src:/app/src
+      - ./backend/db:/app/db
+      - ./backend/.env:/app/.env:ro
       - /app/node_modules
       - uploads-data:/app/uploads
     environment:
@@ -15,6 +21,7 @@ services:
       DB_NAME: "app_db"
       PORT: 8000
       API_URL: "http://localhost:8000"
+      SERVE_FRONTEND: "true"
     depends_on:
       db:
         condition: service_healthy
