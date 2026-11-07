@@ -17,6 +17,7 @@ export default function App() {
       <Route element={<AppLayout />}>
         <Route path="/" element={<FilesPage />} />
         <Route path="/account" element={<AccountPage />} />
+        
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />
