@@ -1,15 +1,41 @@
 services:
-  mysql:
-    image: mysql:8.4
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - uploads-data:/app/uploads
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: app_db
-      MYSQL_USER: app_user
-      MYSQL_PASSWORD: app_password
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: "app_user"
+      DB_PASSWORD: "app_password"
+      DB_NAME: "app_db"
+      PORT: 8000
+      API_URL: "http://localhost:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8
     ports:
       - "3306:3306"
     volumes:
-      - mysql-data:/var/lib/mysql
+      - db-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: drop
+      MYSQL_DATABASE: "app_db"
+      MYSQL_USER: "app_user"
+      MYSQL_PASSWORD: "app_password"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-pdrop"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
-  mysql-data:
+  db-data:
+  uploads-data:
