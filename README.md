@@ -1,94 +1,143 @@
 # Dropbox
 
-A file storage web app for storing files in the Cloud. Users can register, log in, and upload, download, rename, star and delete their files.
+A file-storage web application that allows users to register, log in, and upload, download, rename, star and delete files.
 
-- `backend/` is an Express API. It stores data in MySQL, and files on local disk or in Amazon S3.
-- `frontend/` is a React app.
+The application includes:
+- **Frontend:** React
+- **Backend:** Node.js and Express
+- **Database:** MySQL with Drizzle ORM
+- **File storage:** Local storage during development, with Amazon S3 available for production
+- **Deployment:** Docker on AWS
 
-## Run it locally
+**Live application:** https://n00230920.webdevdelivery.com/
 
-You need Node 24 and Docker.
+## Run locally
 
-Start MySQL:
+### Prerequisites
+- Git
+- Docker Desktop
+- Docker Compose
+- Node.js 22.23
 
-```sh
-docker compose up -d
+The application and MySQL run in Docker, so you do not need to install Node.js or MySQL separately to run the app locally.
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/N00230920/wdd-ca1.git
+cd wdd-ca1
 ```
 
-Then start the backend:
+### 2. Create your local environment file
 
-```sh
+Copy the backend example environment file:
+
+```bash
+cp backend/.env.example backend/.env
+```
+The example file contains development settings. Do not use these values in production, and never commit your `.env` file.
+
+### 3. Build and start the application
+
+From the repository root, run:
+```bash
+docker compose up --build -d
+```
+This builds the application image and starts the application and MySQL containers. Docker Compose waits for MySQL to become healthy before starting the application.
+
+### 4. Add the sample data
+
+Run the seed command inside the application container:
+
+```bash
+docker compose exec app npm run db:seed
+```
+
+**Warning:** The seed command deletes the existing data in the configured database before recreating the tables and adding sample users and files. Only use it with your local development database.
+
+### 5. Open the application
+
+Visit:
+
+- Application: http://localhost:8000
+- API health check: http://localhost:8000/health
+
+You can sign in with any of these sample accounts. The password for all three is `password123`.
+
+| Email | Password |
+|---|---|
+| `alice@example.com` | `password123` |
+| `bob@example.com` | `password123` |
+| `charlie@example.com` | `password123` |
+
+These are development accounts only. Do not use sample credentials in production.
+
+## Useful Docker commands
+
+Run these commands from the repository root.
+
+| Command | Description |
+|---|---|
+| `docker compose up --build -d` | Build and start the application and database in the background |
+| `docker compose logs -f app` | Follow application logs |
+| `docker compose logs -f db` | Follow database logs |
+| `docker compose exec app npm run db:migrate` | Apply migrations that have not yet run |
+| `docker compose exec app npm run db:seed` | Reset the local database and add sample data |
+| `docker compose down` | Stop and remove the containers |
+| `docker compose down -v` | Stop containers and delete the database and uploads volumes |
+
+**Note:** `docker compose down` keeps the named volumes, so your local database and uploaded files remain. Use `docker compose down -v` only when you intentionally want to delete that local data.
+
+## Running code checks
+
+The project uses GitHub Actions to run linting, formatting checks and a production Docker build for pull requests. You can run the same checks locally.
+
+### Backend
+
+```bash
 cd backend
-cp .env.example .env
-npm install
-
-# Add the sample data
-npm run db:seed
-
-# Start the API on http://localhost:3000
-npm run dev
+npm ci
+npm run lint
+npm run format:check
 ```
 
-The API restarts by itself when you change a file in `backend/`.
+### Frontend
 
-In another terminal, start the frontend:
-
-```sh
+```bash
 cd frontend
-cp .env.example .env
-npm install
-
-# Start the frontend on http://localhost:5173
-npm run dev
+npm ci
+npm run lint
+npm run format:check
 ```
 
-Open http://localhost:5173 and log in as one of the sample users. You can check the API is running at http://localhost:3000/health.
+### Production Docker build
 
-`npm run db:seed` seeds the database with three sample users and sample files. They all have the password `password123`:
+From the repository root:
 
-- `alice@example.com`
-- `bob@example.com`
-- `charlie@example.com`
+```bash
+docker build --target production -t drop-app .
+```
 
-## Scripts
+## Database migrations
 
-Run these in `backend/`:
+When database schema changes are made, create a migration using the backend's Drizzle tooling:
 
-| Command                | Description                                                    |
-| ---------------------- | -------------------------------------------------------------- |
-| `npm run dev`          | Starts the API, and restarts it when you change a file         |
-| `npm start`            | Starts the API                                                 |
-| `npm run db:seed`      | Deletes all data, creates the tables and adds the sample users |
-| `npm run db:migrate`   | Runs any new migrations in `db/migrations`                     |
-| `npm run db:generate`  | Writes a new migration after you change `src/schema.js`        |
-| `npm run lint`         | Checks the code for mistakes with ESLint                       |
-| `npm run format`       | Formats the code with Prettier                                 |
-| `npm run format:check` | Checks the code is formatted, without changing it              |
+```bash
+docker compose exec app npm run db:generate
+```
 
-Run these in `frontend/`:
+Review the generated migration and include it in your pull request. To apply pending migrations to the local database:
 
-| Command                | Description                                                        |
-| ---------------------- | ------------------------------------------------------------------ |
-| `npm run dev`          | Starts the frontend, and reloads the page when you change a file   |
-| `npm run build`        | Builds the frontend into `dist/`, using `VITE_API_URL` from `.env` |
-| `npm run preview`      | Serves the built frontend from `dist/`, to check it                |
-| `npm run lint`         | Checks the code for mistakes with ESLint                           |
-| `npm run format`       | Formats the code with Prettier                                     |
-| `npm run format:check` | Checks the code is formatted, without changing it                  |
+```bash
+docker compose exec app npm run db:migrate
+```
 
-## Try the API
+Do not use `db:seed` to update a database that contains data you need to keep; it deletes the existing application data. Use migrations for normal schema updates.
 
-`backend/openapi.yaml` is an OpenAPI spec of all of the endpoints. Import it into a REST API client like Postman to get a request for each one.
+## API documentation
+
+The API's OpenAPI specification is available at `backend/openapi.yaml`. You can import it into a REST API client such as Postman to explore and send requests to the API.
 
 If using Postman, in the import settings, set "Parameter generation" to "Example" so the requests use the sample users.
 
 Most requests need you to be logged in. Send the "Log in" request, and copy the `token` from its response. Then open the collection's Authorization tab, choose "Bearer Token", and paste the token in. Every request in the collection then sends it. Tokens expire after 7 days.
-
-## Code conventions
-
-- Request and response bodies use snake_case, e.g. `first_name`. JavaScript variables use camelCase.
-- Rows from the database keep their column names, e.g. `user.avatar_key`, but `req.user` uses camelCase, e.g. `req.user.avatarKey`.
-- The frontend uses the API's field names as they are, e.g. `user.first_name`.
-- The API sends each record's UUID as `id`. The numeric database id (`req.user.internalId`) is only used in SQL queries.
-
-add
