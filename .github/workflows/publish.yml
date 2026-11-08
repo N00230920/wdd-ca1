@@ -39,7 +39,7 @@ jobs:
             -t "$REGISTRY/drop-app:$TAG" .
           docker push --all-tags "$REGISTRY/drop-app"
 
-deploy:
+  deploy:
   needs: publish
   runs-on: ubuntu-latest
   steps:
