@@ -40,7 +40,7 @@ export default function RegisterPage() {
   return (
     <Card className="mx-4 mt-12 max-w-sm sm:mx-auto">
       <CardHeader>
-        <CardTitle>Create an account</CardTitle>
+        <CardTitle>Create an account </CardTitle>
         <CardDescription>You get 1 GB of storage for free</CardDescription>
       </CardHeader>
       <CardContent>
