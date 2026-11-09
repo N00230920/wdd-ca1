@@ -42,7 +42,7 @@ export default function LoginPage() {
     <Card className="mx-4 mt-12 max-w-sm sm:mx-auto">
       <CardHeader>
         <CardTitle>Log in</CardTitle>
-        <CardDescription>Log in to see your files</CardDescription>
+        <CardDescription>Log in to see your photos</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
