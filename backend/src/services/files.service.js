@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { and, asc, desc, eq, inArray, like, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, like } from "drizzle-orm";
 import { db } from "../db.js";
 import { files } from "../schema.js";
 import { HttpError } from "../utils/httpError.js";
@@ -7,7 +7,15 @@ import * as authService from "./auth.service.js";
 import * as storageService from "./storage.service.js";
 
 // The columns the file list can be sorted by
-const SORT_COLUMNS = ["name", "size_bytes", "created_at"];
+// Maps accepted sort values to safe database columns.
+const SORT_COLUMNS = {
+  name: files.name,
+  size_bytes: files.size_bytes,
+  created_at: files.created_at,
+};
+// The issue was that SORT_COLUMNS was assigned bur never used.
+// That means the code was left unfinished, so Eslint flagged it as an error. 
+// The solution is to use SORT_COLUMNS in the listFiles function to validate the sort parameter and determine the column to sort by.
 
 // Lists the user's files, newest first by default.
 // search: only files whose name contains this text
@@ -27,12 +35,22 @@ export async function listFiles(
     conditions.push(eq(files.is_starred, true));
   }
 
+  // Validate the sort and order parameters, and get the database column to sort by
+  const sortColumns = SORT_COLUMNS[sort];
+  if (!sortColumns) {
+    throw new HttpError(400, "Invalid sort column");
+  }
+  if (order !== "asc" && order !== "desc") {
+    throw new HttpError(400, "Invalid sort order");
+  }
+
   const rows = await db
     .select()
     .from(files)
     .where(and(...conditions)) // and() needs every condition to match
-    .orderBy(sql.raw(`${sort} ${order}`), desc(files.id));
-
+    .orderBy((order === "asc" ? asc : desc)(sortColumns), desc(files.id));
+    // the asc/desc is based on the order parameter, 
+    // The  second sort key is thereas a tiebreaker so the newest file is first if two files have the same value
   const results = [];
   for (const file of rows) {
     results.push(await formatFile(file));
