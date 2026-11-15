@@ -46,8 +46,8 @@ export async function listFiles(
     .from(files)
     .where(and(...conditions)) // and() needs every condition to match
     .orderBy((order === "asc" ? asc : desc)(sortColumns), desc(files.id));
-    // The asc/desc is based on the order parameter, 
-    // The second sort key is if therea is a tiebreaker so the newest file is first if two files have the same value
+  // The asc/desc is based on the order parameter,
+  // The second sort key is if therea is a tiebreaker so the newest file is first if two files have the same value
   const results = [];
   for (const file of rows) {
     results.push(await formatFile(file));
