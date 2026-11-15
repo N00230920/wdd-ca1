@@ -6,10 +6,23 @@ import { HttpError } from "../utils/httpError.js";
 import * as authService from "./auth.service.js";
 import * as storageService from "./storage.service.js";
 
-// Lists the user's files, newest first.
+// The columns the file list can be sorted by
+// Maps accepted sort values to safe database columns.
+const SORT_COLUMNS = {
+  name: files.name,
+  size_bytes: files.size_bytes,
+  created_at: files.created_at,
+};
+
+// Lists the user's files, newest first by default.
 // search: only files whose name contains this text
 // starredOnly: only starred files
-export async function listFiles(userId, { search, starredOnly }) {
+// sort: the column to sort by, e.g. "name"
+// order: "asc" or "desc"
+export async function listFiles(
+  userId,
+  { search, starredOnly, sort = "created_at", order = "desc" },
+) {
   // Only the user's files, plus any filters
   const conditions = [eq(files.user_id, userId)];
   if (search) {
@@ -19,12 +32,22 @@ export async function listFiles(userId, { search, starredOnly }) {
     conditions.push(eq(files.is_starred, true));
   }
 
+  // Validate the sort and order parameters, and get the database column to sort by
+  const sortColumns = SORT_COLUMNS[sort];
+  if (!sortColumns) {
+    throw new HttpError(400, "Invalid sort column");
+  }
+  if (order !== "asc" && order !== "desc") {
+    throw new HttpError(400, "Invalid sort order");
+  }
+
   const rows = await db
     .select()
     .from(files)
     .where(and(...conditions)) // and() needs every condition to match
-    .orderBy(desc(files.created_at), desc(files.id));
-
+    .orderBy((order === "asc" ? asc : desc)(sortColumns), desc(files.id));
+  // The asc/desc is based on the order parameter,
+  // The second sort key is if therea is a tiebreaker so the newest file is first if two files have the same value
   const results = [];
   for (const file of rows) {
     results.push(await formatFile(file));
