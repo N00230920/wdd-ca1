@@ -13,9 +13,6 @@ const SORT_COLUMNS = {
   size_bytes: files.size_bytes,
   created_at: files.created_at,
 };
-// The issue was that SORT_COLUMNS was assigned bur never used.
-// That means the code was left unfinished, so Eslint flagged it as an error. 
-// The solution is to use SORT_COLUMNS in the listFiles function to validate the sort parameter and determine the column to sort by.
 
 // Lists the user's files, newest first by default.
 // search: only files whose name contains this text
@@ -49,8 +46,8 @@ export async function listFiles(
     .from(files)
     .where(and(...conditions)) // and() needs every condition to match
     .orderBy((order === "asc" ? asc : desc)(sortColumns), desc(files.id));
-    // the asc/desc is based on the order parameter, 
-    // The  second sort key is thereas a tiebreaker so the newest file is first if two files have the same value
+    // The asc/desc is based on the order parameter, 
+    // The second sort key is if therea is a tiebreaker so the newest file is first if two files have the same value
   const results = [];
   for (const file of rows) {
     results.push(await formatFile(file));
